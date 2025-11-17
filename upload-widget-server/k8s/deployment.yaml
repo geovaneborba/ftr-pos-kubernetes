@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upload-widget-server-deployment
+  namespace: upload-widget
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate # Atualiza os pods de forma gradual sem downtime
+    rollingUpdate:
+      maxSurge: 20% # permite até 20% mais pods durante a atualização
+      maxUnavailable: 10% # permite até 10% dos pods indisponíveis durante a atualização
+  selector:
+    matchLabels:
+      app: upload-widget-server
+  template:
+    metadata:
+      labels:
+        app: upload-widget-server
+    spec:
+      imagePullSecrets:
+        - name: docker-config-secret
+      containers:
+        - name: upload-widget-server
+          image: geovaneborba/upload-widget-server:v2
+          imagePullPolicy: IfNotPresent
+          envFrom: # using config map and secret best way
+            - configMapRef:
+                name: upload-widget-server-cm
+            - secretRef:
+                name: upload-widget-server-secret
+          #env:
+          # - name: CLOUDFLARE_ACCESS_KEY_ID
+          #   value: "#"
+          # - name: CLOUDFLARE_SECRET_ACCESS_KEY
+          #   value: "#"
+          # - name: CLOUDFLARE_ACCOUNT_ID
+          #   value: "#"
+          #* using config map
+          # - name: "CLOUDFLARE_BUCKET"
+          #   valueFrom:
+          #     configMapKeyRef:
+          #       name: upload-widget-server-cm
+          #       key: CLOUDFLARE_BUCKET
+          # - name: "CLOUDFLARE_PUBLIC_URL"
+          #   valueFrom:
+          #     configMapKeyRef:
+          #       name: upload-widget-server-cm
+          #       key: CLOUDFLARE_PUBLIC_URL
+          #* using secret
+          #  - name: CLOUDFLARE_ACCESS_KEY_ID
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: upload-widget-server-secret
+          #     key: CLOUDFLARE_ACCESS_KEY_ID
+          ports:
+            - containerPort: 3333
+          startupProbe: # verifica se o app iniciou corretamente
+            httpGet:
+              path: /health
+              port: 3333
+            failureThreshold: 3 # tenta 3 vezes antes de considerar que falhou
+            successThreshold: 1 # precisa de 1 sucesso para considerar que está saudável
+            timeoutSeconds: 1 # tempo máximo de espera por uma resposta
+            periodSeconds: 15 # verifica a cada 15 segundos
+            initialDelaySeconds: 5 # espera 5 segundos antes de iniciar as verificações
+          readinessProbe: # verifica se o app está pronto para receber tráfego
+            httpGet:
+              path: /health
+              port: 3333
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+            periodSeconds: 15
+            initialDelaySeconds: 15
+          livenessProbe: # verifica se o app está vivo
+            httpGet:
+              path: /health
+              port: 3333
+            failureThreshold: 2
+            successThreshold: 1
+            timeoutSeconds: 1
+            periodSeconds: 15
+            initialDelaySeconds: 15
+          resources:
+            requests:
+              cpu: "200m" # 0.2 de CPU core
+              memory: "256Mi" # 256 Megabytes
+            limits:
+              cpu: "300m"
+              memory: "384Mi"
