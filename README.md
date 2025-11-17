@@ -85,31 +85,24 @@ $ kubectl apply -f [metrics-server.yaml](http://_vscodecontentref_/0)
 $ git clone https://github.com/geovaneborba/ftr-pos-kubernetes.git
 
 # Entre na pasta do projeto
-
 $ cd ftr-pos-kubernetes
 
 # Configure o namespace para a aplicação
-
 $ kubectl apply -f infra/namespace.yaml
 
 # Aplique os secrets (configure antes os valores reais)
-
 $ kubectl apply -f [secret.yaml](./upload-widget-server/k8s/secret.yaml )
 
 # Aplique o ConfigMap
-
 $ kubectl apply -f upload-widget-server/k8s/config-map.yaml
 
 # Deploy da aplicação
-
 $ kubectl apply -f [deployment.yaml](./upload-widget-server/k8s/deployment.yaml)
 $ kubectl apply -f upload-widget-server/k8s/service.yaml
 
 # Configurar HPA (Auto-scaling)
-
 $ kubectl apply -f [hpa.yaml](./upload-widget-server/k8s/hpa.yaml)
 
 # Verificar o status dos recursos
-
 $ kubectl get all -n upload-widget
 ```
